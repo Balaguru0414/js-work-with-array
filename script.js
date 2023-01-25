@@ -61,6 +61,8 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Histry | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const displayMovements = function (movements) {
 
   containerMovements.innerHTML = '';
@@ -77,9 +79,50 @@ const displayMovements = function (movements) {
     containerMovements.insertAdjacentHTML('afterbegin',html);
   });
 };
-
 displayMovements(account1.movements);
 // console.log(containerMovements.innerHTML);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Balance | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const calcDisplayBalance = function (movements) {
+  const balance = movements.reduce((acc,cur) => acc + cur,0);
+  labelBalance.textContent = `${balance} ₹`
+};
+calcDisplayBalance(account1.movements);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | in, out, interst | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const calcDisplaySummary = function (movements) {
+
+  // ************** | in | ************** 
+  const income = movements
+                 .filter(mov => mov > 0)
+                 .reduce((acc,mov) => acc + mov,0);
+  labelSumIn.textContent = `${income}₹`;
+
+  // ************** | out | ************** 
+  const outGoing = movements
+                 .filter(mov => mov < 0)
+                 .reduce((acc,mov) => acc + mov,0);
+  labelSumOut.textContent = `${Math.abs(outGoing)}₹`;
+
+  // ************** | interest | ************** 
+  const interest = movements
+                 .filter(mov => mov > 0)        // plus value mattum eduka
+                 .map((deposit,i,arr) => {
+                  // console.log(arr)
+                  return (deposit * 1.2) / 100
+                 })
+                 .filter((int,i,arr) => {       // 0 - irundha adhakula interest poda mudiyadhu
+                  // console.log(arr)
+                  return int > 1
+                 })
+                 .reduce((acc,int) => acc + int);
+  labelSumInterest.textContent = `${Math.trunc(interest)}₹`;
+}
+calcDisplaySummary(account1.movements);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | create Userame | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const creatUserNames = function (accs) {
   accs.forEach(function (acc) {
@@ -98,11 +141,52 @@ creatUserNames(accounts);
 // console.log(creatUserNames("Bala Guru"));
 // creatUserNames('Bala Guru');
 
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | login | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Event Handler
+
+// let currentAccount;
+
+btnLogin.addEventListener('click',function (e) {
+  // Prevent form from Submitting
+  e.preventDefault(); 
+
+  // get Correct Account
+  let currentAccount = accounts
+    .find(acc => acc.username === inputLoginUsername.value);
+  // console.log(currentAccount);
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    
+    // ************** | Display UI and Message | ************** 
+      labelWelcome.textContent = `👋 Welcome back, ${currentAccount.owner.split(' ')[0]}`;
+      containerApp.style.opacity = 100;
+
+    // ************** | Clear inputs | **************   
+      inputLoginUsername.value = inputLoginPin.value = '';
+
+    // ************** | Display Movement | ************** 
+      displayMovements(currentAccount.movements);
+
+    // ************** | Display balance | ************** 
+      calcDisplayBalance(currentAccount.movements);
+
+    // ************** | Display Summary | ************** 
+      calcDisplaySummary(currentAccount.movements);
+  };
+});
+
+btnLoan.addEventListener('click',function (e) {
+  // Prevent form from Submitting
+  e.preventDefault(); 
+  displayMovements([`${Number(inputLoanAmount.value)}`]);
+});
+
+
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
 
-// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
 /*
@@ -301,7 +385,153 @@ console.log(movDesc);
 const movDesc = movements.map((mov,i) =>
   `Movement ${i + 1} : You ${mov > 0 ? 'deposite' : 'withdrawal'} ${Math.abs(mov)}`);
 console.log(movDesc);
+
+// filter Method | -----------------------------------------------
+console.log(movements)
+const deposites = movements.filter(function (mov) {
+  return mov > 0;
+});
+console.log(deposites)
+
+// arrow function get results of withdrawal
+const withdrawals = movements.filter(mov => mov < 0);
+console.log(withdrawals)
+
+// i can try for of loop
+const depositesFor = [];
+for(const mov of movements){
+  if (mov > 0) depositesFor.push(mov);
+}
+console.log(depositesFor);
+
+// Reduce Method | ------------------------------------------------
+console.log(movements)
+
+// accumulater -> snow ball (++ increase)
+// const balance = movements.reduce(function (acc,cur,i,arr) {
+//   console.log(`${i} : ${acc}`)
+//   return acc + cur;
+// },0)
+// console.log(balance);
+
+// arrow function
+const balance1 = movements.reduce((acc,cur) => acc + cur,0);
+console.log(balance1);
+
+// for of loop
+// let balance2 = 0;
+// for(const mov of movements) balance2 += mov;
+// console.log(balance2);
+
+// Maximum Value
+// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+const max = movements.reduce((acc,mov) => {
+  if ( acc > mov ) return acc;    
+  else return mov;                
+},movements[0]);
+console.log(max);
+////////////////////////////////////////////////////////////////
+// Coding Challenge #2
+
+Let's go back to Julia and Kate's study about dogs.
+This time, they want to convert dog ages to human ages and
+calculate the average age of the dogs in their study.
+
+Create a function 'calcAverageHumanAge', which accepts an
+arrays of dog's ages ('ages'), and does the following things 
+in order:
+
+1. Calculate the dog age in human years using the following 
+formula: if the dog is <= 2 years old, humanAge = 2 * dogAge. 
+If the dog is > 2 years old, humanAge = 16 + dogAge * 4.
+
+2. Exclude all dogs that are less than 18 human years old 
+(which is the same as keeping dogs that are at least 18 years old)
+
+3. Calculate the average human age of all adult dogs 
+(you should already know from other challenges how we calculate 
+averages 😉)
+
+4. Run the function for both test datasets
+
+TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
+TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
+
+GOOD LUCK 😀
+
+const calcAverageHumanAge = function (ages) {
+  // 1.
+  const humanAges = ages.map(age => age <= 2 ? 2 * age : 16 + age * 4);
+  console.log(humanAges);
+  // 2.
+  const adults = humanAges.filter(age => age >= 18);
+  console.log(adults);
+  // 3.
+  // const average = Math.floor( adults.reduce((acc,age) => acc + age,0) / adults.length );
+  const average = Math.floor( adults.reduce((acc,age,i,arr) => acc + age / arr.length,0) );
+  // 2 3 | (2+3)/2 = 2.5 === 2/2 + 3/2 = 2.5 |
+  console.log(average);
+
+  return average;
+}
+// 4.
+const avg1 = calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
+const avg2 = calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
+console.log(avg1,avg2);
+
+const inrToUsd = 0.0123;
+const totalDepositUSD = movements
+  .filter ( mov => mov > 0 )
+  .map ( mov => mov * inrToUsd )
+  .reduce ( (acc,mov) => acc + mov, 0 );
+
+console.log(totalDepositUSD);
+
+const movementsTotal = movements.reduce((acc,mov) => acc + mov,0)
+console.log(movementsTotal)
+//////////////////////////////////////////////////////////
+// Coding Challenge #3
+
+Rewrite the 'calcAverageHumanAge' function from the previous 
+challenge, but this time as an arrow function, and using 
+chaining!
+
+TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
+TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
+
+GOOD LUCK 😀
+
+const calcAverageHumanAge = function (ages) {
+  const humanAge = ages
+  .map(age => age <= 2 ? age * 2 : 16 + age * 4)
+  .filter(adult => adult >= 18)
+  .reduce((acc,age,i,arr) => acc + age / arr.length,0)
+  return humanAge;
+}
+const age1 = calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
+const age2 = calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
+console.log(age1,age2)
+
+/////////////////////////////////////////////////////////////
+// find medhod || to get my account
+
+const firstWithdrawal = movements.find(mov => mov < 0);
+console.log(firstWithdrawal);
+
+const account = accounts.find(acc => acc.owner === 'Bala Guru');
+console.log(account)
 */
+
+
+
+
+
+
+
+
+
+
+
 
 
 
