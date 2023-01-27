@@ -28,7 +28,7 @@ const account3 = {
 
 const account4 = {
   owner: 'Bala Guru',
-  movements: [430, 1000, 700, 50, 90],
+  movements: [430, 1100, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
 };
@@ -61,67 +61,6 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Histry | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-const displayMovements = function (movements) {
-
-  containerMovements.innerHTML = '';
-
-  movements.forEach(function (mov,i) {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
-
-    const html = `
-      <div class="movements__row">
-        <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
-        <div class="movements__value">${mov} ₹</div>
-      </div>
-    `;
-    containerMovements.insertAdjacentHTML('afterbegin',html);
-  });
-};
-displayMovements(account1.movements);
-// console.log(containerMovements.innerHTML);
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Balance | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc,cur) => acc + cur,0);
-  labelBalance.textContent = `${balance} ₹`
-};
-calcDisplayBalance(account1.movements);
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | in, out, interst | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-const calcDisplaySummary = function (movements) {
-
-  // ************** | in | ************** 
-  const income = movements
-                 .filter(mov => mov > 0)
-                 .reduce((acc,mov) => acc + mov,0);
-  labelSumIn.textContent = `${income}₹`;
-
-  // ************** | out | ************** 
-  const outGoing = movements
-                 .filter(mov => mov < 0)
-                 .reduce((acc,mov) => acc + mov,0);
-  labelSumOut.textContent = `${Math.abs(outGoing)}₹`;
-
-  // ************** | interest | ************** 
-  const interest = movements
-                 .filter(mov => mov > 0)        // plus value mattum eduka
-                 .map((deposit,i,arr) => {
-                  // console.log(arr)
-                  return (deposit * 1.2) / 100
-                 })
-                 .filter((int,i,arr) => {       // 0 - irundha adhakula interest poda mudiyadhu
-                  // console.log(arr)
-                  return int > 1
-                 })
-                 .reduce((acc,int) => acc + int);
-  labelSumInterest.textContent = `${Math.trunc(interest)}₹`;
-}
-calcDisplaySummary(account1.movements);
-
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | create Userame | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const creatUserNames = function (accs) {
@@ -136,22 +75,98 @@ const creatUserNames = function (accs) {
 };
 
 creatUserNames(accounts);
-// console.log(accounts)
-
+// console.log(accounts);
 // console.log(creatUserNames("Bala Guru"));
 // creatUserNames('Bala Guru');
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Histry - Movements | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const displayMovements = function (movements,sort = false) {
+
+  containerMovements.innerHTML = '';
+
+  const movs = sort ? movements.slice().sort((a,b) => a-b) : movements;
+
+  movs.forEach(function (mov,i) {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+
+    const html = `
+      <div class="movements__row">
+        <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+        <div class="movements__value">${mov} ₹</div>
+      </div>
+    `;
+    containerMovements.insertAdjacentHTML('afterbegin',html);
+  });
+};
+// displayMovements(account1.movements);
+// console.log(containerMovements.innerHTML);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Balance | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const calcDisplayBalance = function (acc) {
+  const balance = acc.movements.reduce((acc,cur) => acc + cur,0);
+  acc.balance = balance;
+  labelBalance.textContent = `${acc.balance} ₹`
+};
+// calcDisplayBalance(account1);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Summary in, out, interst | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const calcDisplaySummary = function (acc) {
+
+  // ************** | in | ************** 
+  const incomes = acc.movements
+  .filter(mov => mov > 0)
+  .reduce((acc,mov) => acc + mov,0);
+  labelSumIn.textContent = `${incomes}₹`;
+
+  // ************** | out | ************** 
+  const outGoing = acc.movements
+                 .filter(mov => mov < 0)
+                 .reduce((acc,mov) => acc + mov,0);
+  labelSumOut.textContent = `${Math.abs(outGoing)}₹`;
+
+  // ************** | interest | ************** 
+  const interest = acc.movements
+                 .filter(mov => mov > 0)        // plus value mattum eduka
+                 .map((deposit,i,arr) => {
+                  // console.log(arr)
+                  return (deposit * acc.interestRate) / 100
+                 })
+                 .filter((int,i,arr) => {       // 0 - irundha adhakula interest poda mudiyadhu
+                  // console.log(arr)
+                  return int > 1
+                 })
+                 .reduce((acc,int) => acc + int);
+  labelSumInterest.textContent = `${interest}₹`;
+}
+// calcDisplaySummary(account1);
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Update UI | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const updateUI = function (acc) {
+  // ************** | Display Movement | ************** 
+      displayMovements(acc.movements);
+
+    // ************** | Display balance | ************** 
+      calcDisplayBalance(acc);
+
+    // ************** | Display Summary | ************** 
+      calcDisplaySummary(acc);
+}
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | login | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Event Handler
 
-// let currentAccount;
+let currentAccount;
 
 btnLogin.addEventListener('click',function (e) {
   // Prevent form from Submitting
   e.preventDefault(); 
 
   // get Correct Account
-  let currentAccount = accounts
+  currentAccount = accounts
     .find(acc => acc.username === inputLoginUsername.value);
   // console.log(currentAccount);
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
@@ -160,27 +175,102 @@ btnLogin.addEventListener('click',function (e) {
       labelWelcome.textContent = `👋 Welcome back, ${currentAccount.owner.split(' ')[0]}`;
       containerApp.style.opacity = 100;
 
-    // ************** | Clear inputs | **************   
-      inputLoginUsername.value = inputLoginPin.value = '';
-
-    // ************** | Display Movement | ************** 
-      displayMovements(currentAccount.movements);
-
-    // ************** | Display balance | ************** 
-      calcDisplayBalance(currentAccount.movements);
-
-    // ************** | Display Summary | ************** 
-      calcDisplaySummary(currentAccount.movements);
+    // Update UI
+      updateUI(currentAccount);
   };
+  // ************** | Clear inputs | **************   
+      inputLoginUsername.value = inputLoginPin.value = '';
+      inputLoginPin.blur();
 });
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Transfer Money | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+btnTransfer.addEventListener('click',function (e) {
+  // Prevent form from Submitting
+  e.preventDefault();
+
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts
+  .find(acc => acc.username === inputTransferTo.value);
+  // console.log(amount, receiverAcc);
+
+ // Tranfer valid
+  if (amount > 0 &&
+      receiverAcc &&
+      currentAccount.balance >= amount &&
+      receiverAcc?.username !== currentAccount.username) 
+  {
+    console.log('Transfer Valid');
+  // Doing Transfer 
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+
+  // Update UI
+    updateUI(currentAccount);
+};
+// clean inputs
+    inputTransferTo.value = inputTransferAmount.value = '';
+    inputTransferTo.blur();
+    inputTransferAmount.blur();
+
+});
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Request Loan | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 btnLoan.addEventListener('click',function (e) {
-  // Prevent form from Submitting
-  e.preventDefault(); 
-  displayMovements([`${Number(inputLoanAmount.value)}`]);
+  // preventDefault
+  e.preventDefault();
+
+  const loanAmount = Number(inputLoanAmount.value);
+  const percentAge = currentAccount.movements.some(mov => mov >= loanAmount * 0.1);
+
+  if (loanAmount > 0 && percentAge ) {
+      // Add Movement
+      currentAccount.movements.push(loanAmount);
+
+      // Update UI
+        updateUI(currentAccount);
+    }
+    // clean input
+        inputLoanAmount.value = '';
+        inputLoanAmount.blur();
 });
 
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Close Account | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+btnClose.addEventListener('click',function (e) {
+  // preventDefault
+  e.preventDefault();
+  let user = inputCloseUsername.value;
+  let pin = Number(inputClosePin.value);
+
+  if (currentAccount.username === user &&
+      currentAccount.pin === pin) {
+
+    const index = accounts.findIndex(acc => acc.username === currentAccount.username);
+    // console.log(index);
+
+    // Delete Account
+    accounts.splice(index, 1);
+
+    // Hide UI
+    containerApp.style.opacity = 0;
+  };
+  // clean Input
+    inputCloseUsername.value = inputClosePin.value = '';
+    inputCloseUsername.blur();
+    inputClosePin.blur();
+});
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% | Sorting Movements | %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+let stored = false;
+
+btnSort.addEventListener('click',function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements,!stored);
+  stored = !stored;
+});
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -520,37 +610,90 @@ console.log(firstWithdrawal);
 
 const account = accounts.find(acc => acc.owner === 'Bala Guru');
 console.log(account)
+////////////////////////////////////////////////////////////////
+console.log(movements);
+
+Equality
+console.log(movements.includes(-130));
+
+SOME -- Condition
+console.log(movements.some(mov => mov === -130)); // | we use includes Medhud
+
+console.log(movements.some(mov => mov > 4000));   // | some is perfect for that
+
+EVERY
+console.log(movements.every(mov => mov > -700));
+
+Seperate call back
+const depo = mov => mov > 1000;
+console.log(movements.some(depo));
+console.log(movements.every(depo));
+console.log(movements.filter(depo));
+
+// Flat Method //////////////////////////////////////////////////
+
+const arr = [[1,2,3],[4,5,6],[7,8,9]];
+const arr1 = [ [ [1,2] ,3] , [4, [5,6] ] , [7, [8,9] ] ];
+
+console.log(arr.flat());
+console.log(arr1.flat());
+
+// const accountMovement = accounts.map(acc => acc.movements);
+// console.log(accountMovement);
+
+// const allMovement = accountMovement.flat();
+// console.log(allMovement);
+
+// const overallBalance = allMovement.reduce((acc,mov) => acc + mov,0);
+// console.log(overallBalance);
+
+// Above all in | Chaning medhod
+
+const overallBalance = accounts
+                        .map(acc => acc.movements)
+                        .flat()
+                        .reduce((acc,mov) => acc + mov,0);
+console.log(overallBalance);
+
+// flatMp 
+const overallBalance1 = accounts
+                        .flatMap(acc => acc.movements)
+                        .reduce((acc,mov) => acc + mov,0);
+console.log(overallBalance1);
+
+// SORTiNG ///////////////////////////////////////////////////////
+
+// Strings-------------------------
+const owners = ['Dhana','Bala','Surya','Abi'];
+// console.log(owners.sort());
+
+// Number----------------------------
+console.log(movements);
+// console.log(movements.sort());
+
+
+// return < 0,A,B | ( Keep Order )
+// return < 0,B,A | ( Switch Order )
+
+// Assending--------------------------
+// movements.sort((a,b) => {
+//   if (a > b) return 1;
+//   if (b > a) return -1; // ----->   a < b | SAME
+// });
+//          ||
+movements.sort((a,b) => a - b);   // assending
+console.log(movements);
+
+// Dessending-------------------------
+
+// movements.sort((a,b) => {
+//   if (a > b) return -1;
+//   if (b > a) return 1; // ----->   a < b | SAME
+// });
+//          ||
+movements.sort((a,b) => b - a);   // Dessending
+console.log(movements);
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

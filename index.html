@@ -24,6 +24,7 @@
           type="text"
           placeholder="user"
           class="login__input login__input--user"
+          autofocus
         />
         <!-- In practice, use type="password" -->
         <input
@@ -73,7 +74,7 @@
         <p class="summary__value summary__value--out">0000€</p>
         <p class="summary__label">Interest</p>
         <p class="summary__value summary__value--interest">0000€</p>
-        <button class="btn--sort">&downarrow; SORT</button>
+        <button class="btn--sort ">⬇ SORT</button>
       </div>
 
       <!-- OPERATION: TRANSFERS -->
@@ -104,8 +105,8 @@
         <form class="form form--close">
           <input type="text" class="form__input form__input--user" />
           <input
-            type="password"
-            maxlength="6"
+            type="text"
+            maxlength="4"
             class="form__input form__input--pin"
           />
           <button class="form__btn form__btn--close">➜</button>

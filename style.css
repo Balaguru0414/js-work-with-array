@@ -201,10 +201,18 @@ nav {
 .btn--sort {
   margin-left: auto;
   border: none;
-  background: none;
+/*  background: none;*/
   font-size: 1.3rem;
   font-weight: 500;
   cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 10px;
+  box-shadow: 2px 2px 2px grey;
+}
+.btn--sort:hover{
+  color: white;
+  background-color: #0081C9;
+  transition: all 0.3s;
 }
 
 /* OPERATIONS */
